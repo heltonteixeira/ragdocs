@@ -1,0 +1,10 @@
+src/
+ref/
+.clinecontext
+.clinelearn
+.clinerules
+ragdocs_plan.md
+tsconfig.json
+.git
+.gitignore
+node_modules/
