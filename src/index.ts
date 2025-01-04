@@ -72,22 +72,25 @@ class RagDocsServer {
         {
           name: 'add_document',
           description: 'Add a document to the RAG system',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              url: { type: 'string', description: 'Document URL' },
-              content: { type: 'string', description: 'Document content' },
-              metadata: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string', description: 'Document title' },
-                  contentType: { type: 'string', description: 'Content type (e.g., text/plain, text/markdown)' },
+            inputSchema: {
+              type: 'object',
+              properties: {
+                url: { type: 'string', description: 'Document URL or file path' },
+                content: { 
+                  type: 'string', 
+                  description: 'Optional document content. If not provided, content will be fetched from the URL' 
                 },
-                additionalProperties: true,
+                metadata: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string', description: 'Document title' },
+                    contentType: { type: 'string', description: 'Content type (e.g., text/plain, text/markdown)' },
+                  },
+                  additionalProperties: true,
+                },
               },
+              required: ['url'],
             },
-            required: ['url', 'content'],
-          },
         },
         {
           name: 'search_documents',
@@ -196,12 +199,28 @@ class RagDocsServer {
         switch (request.params.name) {
           case 'add_document': {
             const args = request.params.arguments as Record<string, unknown>;
-            if (!args || typeof args.url !== 'string' || typeof args.content !== 'string') {
-              throw new Error('Invalid document format: url and content must be strings');
+            if (!args || typeof args.url !== 'string') {
+              throw new Error('Invalid document format: url must be a string');
             }
+            
+            let content = '';
+            if (typeof args.content === 'string') {
+              content = args.content;
+            } else if (args.url.startsWith('file://')) {
+              const filePath = args.url.slice('file://'.length);
+              try {
+                const fs = await import('fs/promises');
+                content = await fs.readFile(filePath, 'utf-8');
+              } catch (error) {
+                throw new Error(`Failed to read file: ${(error as Error).message}`);
+              }
+            } else {
+              throw new Error('Content must be provided for non-file URLs');
+            }
+
             const doc: Document = {
               url: args.url,
-              content: args.content,
+              content: content,
               metadata: (args.metadata as Record<string, unknown>) || {}
             };
             await client.addDocument(doc);

@@ -158,6 +158,9 @@ export class ApiClient {
   async addDocument(doc: Document): Promise<void> {
     try {
       // Check if document already exists
+      if (!doc.url) {
+        throw new Error('Document URL is required');
+      }
       if (await this.qdrant.documentExists(doc.url)) {
         throw new McpError(
           ErrorCode.InvalidRequest,
@@ -166,12 +169,15 @@ export class ApiClient {
       }
 
       // Generate embeddings for the content
+      if (!doc.content) {
+        throw new Error('Document content is required');
+      }
       const embedding = await this.embeddingService.generateEmbeddings(doc.content);
 
       // Store document in Qdrant
       await this.qdrant.storeDocumentChunks(
         [{
-          content: doc.content,
+          content: doc.content || '',
           index: 0,
           metadata: {
             startPosition: 0,
@@ -183,7 +189,7 @@ export class ApiClient {
         {
           url: doc.url,
           title: doc.metadata.title || '',
-          domain: new URL(doc.url).hostname,
+          domain: doc.url ? new URL(doc.url).hostname : '',
           timestamp: new Date().toISOString(),
           contentType: doc.metadata.contentType || 'text/plain',
           wordCount: doc.content.split(/\s+/).length,

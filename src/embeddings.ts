@@ -15,6 +15,12 @@ export class OllamaProvider implements EmbeddingProvider {
   }
 
   async generateEmbeddings(text: string): Promise<number[]> {
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      throw new McpError(
+        ErrorCode.InvalidRequest,
+        'Text must be a non-empty string'
+      );
+    }
     try {
       console.error('Generating Ollama embeddings for text:', text.substring(0, 50) + '...');
       const response = await ollama.embeddings({
@@ -48,6 +54,12 @@ export class OpenAIProvider implements EmbeddingProvider {
   }
 
   async generateEmbeddings(text: string): Promise<number[]> {
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      throw new McpError(
+        ErrorCode.InvalidRequest,
+        'Text must be a non-empty string'
+      );
+    }
     try {
       console.error('Generating OpenAI embeddings for text:', text.substring(0, 50) + '...');
       const response = await this.client.embeddings.create({

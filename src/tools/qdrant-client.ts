@@ -27,7 +27,7 @@ export class QdrantWrapper {
 
   constructor(url?: string, apiKey?: string) {
     this.client = new QdrantClient({
-      url: url || 'http://10.1.1.199:6333',
+      url: url || 'http://localhost:6333',
       apiKey: apiKey,
       timeout: 10000 // Add timeout to help debug connection issues
     });
@@ -128,8 +128,17 @@ export class QdrantWrapper {
    * @param url Document URL
    * @returns true if document exists
    */
+  private validateUrl(url: string): void {
+    try {
+      new URL(url);
+    } catch (error) {
+      throw new QdrantError('Invalid URL format');
+    }
+  }
+
   async documentExists(url: string): Promise<boolean> {
     try {
+      this.validateUrl(url);
       const response = await this.client.scroll(this.collectionName, {
         filter: {
           must: [
@@ -158,6 +167,7 @@ export class QdrantWrapper {
    */
   async removeDocument(url: string): Promise<void> {
     try {
+      this.validateUrl(url);
       await this.client.delete(this.collectionName, {
         filter: {
           must: [

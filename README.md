@@ -25,14 +25,53 @@ A Model Context Protocol (MCP) server that provides RAG (Retrieval-Augmented Gen
 ## Available Tools
 
 ### 1. add_document
-Add a document to the RAG system.
+Add a document to the RAG system from either a URL or file path.
 
 Parameters:
-- `url` (required): Document URL/identifier
-- `content` (required): Document content
+- `url` (required): Document source - can be either:
+  - A URL (e.g., "https://example.com/docs/guide.md")
+  - Local file path (e.g., "./docs/guide.md")
+  - Remote file path (e.g., "https://raw.githubusercontent.com/user/repo/main/README.md")
 - `metadata` (optional): Document metadata
   - `title`: Document title
-  - `contentType`: Content type (e.g., "text/markdown")
+  - `contentType`: Content type (auto-detected from file extension)
+
+Supported File Types:
+- Markdown (.md)
+- Plain Text (.txt)
+- PDF (.pdf)
+- Word Documents (.docx)
+
+File Handling Notes:
+- Local files must be accessible to the server and use file:// protocol
+  - On Unix/Linux: file:///path/to/file
+  - On Windows: file://C:/path/to/file
+- Maximum file size: 10MB
+- Files are automatically chunked for optimal processing
+- Content type is auto-detected from file extension
+- UTF-8 encoding is assumed for text files
+
+Examples:
+```json
+// Adding a web URL
+{
+  "url": "https://example.com/docs/guide.md"
+}
+
+// Adding a local file on Unix/Linux
+{
+  "url": "file:///path/to/documentation/user-guide.md"
+}
+
+// Adding a local file on Windows
+{
+  "url": "file://C:/path/to/documentation/user-guide.md"
+}
+
+// Adding a remote file
+{
+  "url": "https://raw.githubusercontent.com/org/repo/main/README.md"
+}
 
 ### 2. search_documents
 Search through stored documents using semantic similarity.
